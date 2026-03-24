@@ -1,4 +1,4 @@
-# CTF Reverse Writeup
+# Reverse_3 Writeup
 
 照常ida打开 shift+f12追踪flag字符串，追到main函数得到
 
