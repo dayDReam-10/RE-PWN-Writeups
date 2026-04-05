@@ -1,4 +1,4 @@
-# xor题解
+# xor Writeup
 
 ## 1. 初步分析
 

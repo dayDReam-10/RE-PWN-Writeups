@@ -1,4 +1,3 @@
-
 # RSA Writeup
 
 我们先了解 **RSA 的加密原理**：
@@ -11,7 +10,7 @@
 5. 公钥为 $(n, e)$，私钥为 $(n, d)$。
 
 ## 2. 加密过程
-将明文 $m$（$0 < m < n$）加密为密文 $c$：
+将明文 $m$加密为密文 $c$：
 $$c = m^e \bmod n$$
 
 ## 3. 解密过程
@@ -85,5 +84,7 @@ with open("D:\\你的路径\\flag.enc", "rb+") as f:
 flag = rsa.decrypt(f_content, key)
 print(flag)
 ```
+flag{decrypt_256}
 ```
+
 
