@@ -1,9 +1,12 @@
 # NotOnlyDotNet WriteUp
 
+## 题目概述
+
 （dump内存，zstd解压，代码分析）
 
 主函数给出，直接分析
 
+```c
 int __fastcall main(int argc, const char **argv, const char **envp)
 {
   void *p_stat_loc; // rsi
@@ -103,11 +106,17 @@ int __fastcall main(int argc, const char **argv, const char **envp)
   }
   return 0;
 }
+```
+
+## 关键信息
 
 遇到了ZSTD的相关函数
+
+```c
 size = ZSTD_decompress(ptr, size, &gcore_data, (unsigned int)gcore_size);
 
 size = ZSTD_decompress(ptr, size, &gshell_data, (unsigned int)gshell_size);
+```
 
 先不着急，先分析下主逻辑
 
@@ -127,8 +136,11 @@ core_data通过管道传给子进程
 
 找完了
 
+## 导出数据
+
 shift+f2 换py写脚本
 
+```python
 import idaapi
 import idc
 import ida_bytes
@@ -139,7 +151,7 @@ size = 0x1BDCC80
 data=ida_bytes.get_bytes(start,size)
 
 with open("shell_data.bin", "wb") as f:
-    f.write(data)
+  f.write(data)
 
 import idaapi
 import idc
@@ -151,7 +163,10 @@ size = 0x24AA
 data=ida_bytes.get_bytes(start,size)
 
 with open("core_data.bin", "wb") as f:
-    f.write(data)
+  f.write(data)
+```
+
+## 解压分析
 
 然后用zstd解压
 
@@ -161,6 +176,7 @@ with open("core_data.bin", "wb") as f:
 
 反过来写脚本就好啦
 
+```python
 import base64
 from Crypto.Cipher import AES
 
@@ -184,3 +200,4 @@ pad_len = decrypted[-1]
 flag = decrypted[:-pad_len].decode('utf-8')
 
 print(flag)
+```

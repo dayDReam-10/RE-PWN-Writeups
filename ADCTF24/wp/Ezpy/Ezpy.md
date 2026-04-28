@@ -1,11 +1,20 @@
 # Ezpy WriteUp
 
-die看到打包工具: PyInstaller[modified]
+## 题目入口
 
+die 看到打包工具：PyInstaller [modified]
+
+先跑：
+
+```bash
 python pyinstxtractor.py main.exe
+```
 
-得到的.pyc放https://pylingual.io/
+得到的 `.pyc` 丢到 https://pylingual.io/
 
+## 反编译结果
+
+```python
 # Decompiled with PyLingual (https://pylingual.io)
 # Internal filename: main.py
 # Bytecode version: 3.9.0beta5 (3425)
@@ -33,5 +42,8 @@ if encoded == secret:
     print('Correct!')
 else:
     print('Wrong!')
+```
 
-显然z3解就行
+## 结论
+
+显然 z3 解就行。
